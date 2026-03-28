@@ -1,0 +1,27 @@
+{
+  "name": "vector-integration-gateway",
+  "version": "1.0.0",
+  "description": "Contract-Based Integration Gateway for Vector (W23) — eliminates integration fragility and schema drift",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "demo": "tsx src/index.ts",
+    "db:init": "tsx src/db-init.ts",
+    "db:reset": "rm -f vector.db && npm run db:init",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["vector", "integration", "gateway", "crm", "hubspot", "salesforce", "schema-drift"],
+  "author": "Vector Engineering",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "better-sqlite3": "^11.7.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

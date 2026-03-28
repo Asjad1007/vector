@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+*.log
+vector.db
+vector.db-wal
+vector.db-shm
