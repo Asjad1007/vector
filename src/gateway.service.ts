@@ -1,6 +1,4 @@
-// ============================================================================
 // Vector Integration Gateway — Gateway Service
-// ============================================================================
 // The Dynamic Transformation Engine. Takes a raw Vector visitor payload,
 // applies the JSONB mapping contract, and outputs a formatted JSON object
 // ready for the target CRM's API.
@@ -8,7 +6,6 @@
 // Key Feature: GRACEFUL DEGRADATION
 // - Primary key fields (email, company_domain) → THROW on missing
 // - Non-essential fields (page_url, signal_strength) → WARN + use default
-// ============================================================================
 
 import { logger } from './logger.js';
 import * as db from './db.js';
@@ -26,9 +23,7 @@ import type {
 } from './types.js';
 import { ContractStatus } from './types.js';
 
-// --------------------------------------------------------
 // Type Coercion
-// --------------------------------------------------------
 
 function coerceValue(
   value: unknown,
@@ -84,9 +79,7 @@ function coerceValue(
   }
 }
 
-// --------------------------------------------------------
 // Payload Validation
-// --------------------------------------------------------
 
 /**
  * Pre-flight validation that distinguishes primary key errors from non-essential warnings.
@@ -128,9 +121,7 @@ export function validatePayloadCompleteness(
   };
 }
 
-// --------------------------------------------------------
 // Dynamic Transformation Engine
-// --------------------------------------------------------
 
 /**
  * Transform a raw Vector visitor payload using the mapping contract.
@@ -237,9 +228,7 @@ export function transformPayload(
   };
 }
 
-// --------------------------------------------------------
 // Contract CRUD
-// --------------------------------------------------------
 
 /**
  * Create or update an integration contract for a customer + platform.
@@ -293,9 +282,7 @@ export function pauseContract(
   db.updateContractStatus(contractId, ContractStatus.DRIFT_DETECTED);
 }
 
-// --------------------------------------------------------
 // Helpers
-// --------------------------------------------------------
 
 /**
  * Extract a value from the Vector payload by field name.

@@ -1,6 +1,4 @@
-// ============================================================================
 // Vector Integration Gateway — Resilient Sync Worker
-// ============================================================================
 // Implements the Outbox Pattern for reliable data synchronization to CRMs.
 //
 // Flow:
@@ -16,7 +14,6 @@
 //   Attempt 2: +1 minute   (60,000 ms)
 //   Attempt 3: +10 minutes (600,000 ms)
 //   Attempt 4: +1 hour     (3,600,000 ms)
-// ============================================================================
 
 import { logger } from './logger.js';
 import * as db from './db.js';
@@ -31,9 +28,7 @@ import type {
 } from './types.js';
 import { SyncStatus } from './types.js';
 
-// --------------------------------------------------------
 // Retry Configuration
-// --------------------------------------------------------
 
 /** Exponential backoff delays in milliseconds: 1m, 10m, 1h */
 const RETRY_DELAYS_MS = [60_000, 600_000, 3_600_000] as const;
@@ -41,9 +36,7 @@ const RETRY_DELAYS_MS = [60_000, 600_000, 3_600_000] as const;
 /** Maximum number of attempts (1 initial + 3 retries) */
 const MAX_ATTEMPTS = 4;
 
-// --------------------------------------------------------
 // Enqueue Sync Job (Outbox Pattern)
-// --------------------------------------------------------
 
 /**
  * Enqueue a sync job by writing the payload to the sync_logs table FIRST.
@@ -93,9 +86,7 @@ export function enqueueSyncJob(
   return syncLog;
 }
 
-// --------------------------------------------------------
 // Process Pending Jobs
-// --------------------------------------------------------
 
 /**
  * Process all pending and retryable sync jobs.
@@ -144,9 +135,7 @@ export function processPendingJobs(): {
   return stats;
 }
 
-// --------------------------------------------------------
 // Individual Job Processing
-// --------------------------------------------------------
 
 function processJob(job: SyncLogEntry): void {
   // Fetch the contract to get platform info
@@ -246,9 +235,7 @@ function processJob(job: SyncLogEntry): void {
   }
 }
 
-// --------------------------------------------------------
 // Helpers
-// --------------------------------------------------------
 
 function humanizeDelay(ms: number): string {
   if (ms < 60_000) return `${Math.round(ms / 1000)}s`;

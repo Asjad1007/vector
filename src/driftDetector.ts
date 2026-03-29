@@ -1,6 +1,4 @@
-// ============================================================================
 // Vector Integration Gateway — Drift Detector
-// ============================================================================
 // Detects schema drift by comparing the SHA-256 hash of the remote CRM schema
 // against the stored hash in the integration contract.
 //
@@ -11,7 +9,6 @@
 //
 // Algorithm:
 //   hash(sorted fields + types) → compare → if mismatch → full diff
-// ============================================================================
 
 import { createHash } from 'node:crypto';
 import { logger } from './logger.js';
@@ -27,9 +24,7 @@ import type {
 } from './types.js';
 import { ContractStatus } from './types.js';
 
-// --------------------------------------------------------
 // Schema Hashing
-// --------------------------------------------------------
 
 /**
  * Generate a deterministic SHA-256 hash of a remote schema.
@@ -47,9 +42,7 @@ export function generateSchemaHash(fields: RemoteSchemaField[]): string {
   return createHash('sha256').update(canonical).digest('hex');
 }
 
-// --------------------------------------------------------
 // Drift Detection
-// --------------------------------------------------------
 
 /**
  * Detect schema drift for a single integration contract.
@@ -153,9 +146,7 @@ export function detectDrift(contract: IntegrationContract): DriftReport {
   };
 }
 
-// --------------------------------------------------------
 // Full Schema Diff
-// --------------------------------------------------------
 
 /**
  * Identify exactly which fields are missing, changed in type, or newly added.
@@ -227,9 +218,7 @@ function identifyDriftDetails(
   return { missingFields, typeChanges, newFields };
 }
 
-// --------------------------------------------------------
 // Batch Drift Scan
-// --------------------------------------------------------
 
 /**
  * Scan ALL active contracts for schema drift.

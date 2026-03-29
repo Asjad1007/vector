@@ -1,6 +1,4 @@
-// ============================================================================
 // Vector Integration Gateway — Mock CRM Service
-// ============================================================================
 // Simulates HubSpot and Salesforce API responses for development and testing.
 // The schema returned by fetchHubSpotSchema() can be mutated between calls to
 // simulate schema drift (field renames, deletions, type changes).
@@ -9,13 +7,10 @@
 //   import { mockCRM, mutateHubSpotSchema, resetHubSpotSchema } from './mockService.js';
 //   const schema = mockCRM.fetchHubSpotSchema('customer_123');
 //   mutateHubSpotSchema('rename', 'primary_contact_addr', 'main_email');
-// ============================================================================
 
 import type { RemoteSchemaField, MockAPIResponse } from './types.js';
 
-// --------------------------------------------------------
 // Base Schema Definitions
-// --------------------------------------------------------
 
 const BASE_HUBSPOT_SCHEMA: RemoteSchemaField[] = [
   { name: 'primary_contact_addr', type: 'string', required: true, label: 'Primary Contact Email' },
@@ -41,9 +36,7 @@ const BASE_SALESFORCE_SCHEMA: RemoteSchemaField[] = [
   { name: 'SignalType__c', type: 'string', required: false, label: 'Signal Type (Custom)' },
 ];
 
-// --------------------------------------------------------
 // Mutable State (for drift simulation)
-// --------------------------------------------------------
 
 let currentHubSpotSchema: RemoteSchemaField[] = structuredClone(BASE_HUBSPOT_SCHEMA);
 let currentSalesforceSchema: RemoteSchemaField[] = structuredClone(BASE_SALESFORCE_SCHEMA);
@@ -54,9 +47,7 @@ let apiCallCount = 0;
 // Force specific response codes for testing
 let forcedResponseCode: number | null = null;
 
-// --------------------------------------------------------
 // Schema Mutation Functions (for drift simulation)
-// --------------------------------------------------------
 
 export type DriftMutation = 'rename' | 'delete' | 'type_change' | 'add';
 
@@ -133,9 +124,7 @@ export function resetAPICallCount(): void {
   apiCallCount = 0;
 }
 
-// --------------------------------------------------------
 // Mock CRM API
-// --------------------------------------------------------
 
 export const mockCRM = {
   /**
@@ -197,9 +186,7 @@ export const mockCRM = {
   },
 };
 
-// --------------------------------------------------------
 // Response Factory
-// --------------------------------------------------------
 
 function mockResponse(status: number, _payload: Record<string, unknown>): MockAPIResponse {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
@@ -243,9 +230,7 @@ function mockResponse(status: number, _payload: Record<string, unknown>): MockAP
   }
 }
 
-// --------------------------------------------------------
 // Schema Fetcher Factory
-// --------------------------------------------------------
 
 /**
  * Get the appropriate schema fetcher for a given platform.

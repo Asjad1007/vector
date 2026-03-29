@@ -7,7 +7,11 @@ A companion document to the README explaining the **why** behind key architectur
 
 ---
 
-## 1. Why JSONB Mapping Contracts (Not a Flat Table)
+## 1. Why JSON Mapping Contracts (Not a Flat Table)
+
+> **Architectural Note on the Prototype:** 
+> For this "Proof of Work," the system runs entirely on **SQLite** for a zero-friction, zero-infrastructure demonstration. Everything works locally out of the box. 
+> However, the architecture is fundamentally designed to be backed by **PostgreSQL JSONB** in production. The reasoning below applies to both, but relies on PostgreSQL for true production scale at Vector.
 
 ### The Alternative: Flat `field_mappings` Table
 
@@ -28,21 +32,21 @@ This normalizes the data. Every textbook says this is "correct." But for this sp
 
 Every time we transform a payload, we need to fetch the full mapping. With a flat table, that's a JOIN across N rows (one per field). At Vector's throughput — syncing thousands of visitor signals per hour across dozens of customers — this means thousands of multi-row JOINs per minute. 
 
-With JSONB, it's one row. One query. The entire contract is in memory in a single read.
+With JSON (or JSONB in Postgres), it's one row. One query. The entire contract is loaded into memory in a single read.
 
 ### Problem 2: Complex Versioning
 
-When a customer's schema drifts and we need to snapshot the "before" state, a flat table requires copying N rows atomically. With JSONB, we copy one row. `INSERT INTO integration_contracts (mapping_contract, version) SELECT mapping_contract, version + 1 FROM ...`. Copy-on-write, one row.
+When a customer's schema drifts and we need to snapshot the "before" state, a flat table requires copying N rows atomically. With a single JSON document, we copy one row. `INSERT INTO integration_contracts (mapping_contract, version) SELECT mapping_contract, version + 1 FROM ...`. Copy-on-write, simple and atomic.
 
 ### Problem 3: Atomic Updates
 
-Updating a mapping contract — say, remapping three fields at once — is a multi-row transaction in a flat table. With JSONB, it's a single `UPDATE ... SET mapping_contract = $1`. The entire contract is always in a consistent state.
+Updating a mapping contract — say, remapping three fields at once — is a multi-row transaction in a flat table. With a JSON document, it's a single `UPDATE ... SET mapping_contract = $1`. The entire contract is always in a consistent state.
 
 ### When Flat Tables Win
 
-If we needed to query across all customers to find "who maps `visitor_email` to what?" — a flat table would be better. But we don't have that query pattern today. If we do in the future, PostgreSQL's GIN indexes on JSONB handle it well enough: `WHERE mapping_contract @> '{"visitor_email": {}}'`.
+If we needed to query across all customers to find "who maps `visitor_email` to what?" — a flat table would be better. But we don't have that query pattern today. If we do in the future, PostgreSQL's GIN indexes on JSONB handle it perfectly. For the SQLite prototype, the built-in `json_extract()` functions are more than sufficient.
 
-**Decision**: JSONB wins for this access pattern. Revisit if query patterns change.
+**Decision**: A single JSON document wins for this access pattern. We use SQLite `TEXT` for the prototype and PostgreSQL `JSONB` for production.
 
 ---
 

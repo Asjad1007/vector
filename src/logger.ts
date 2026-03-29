@@ -1,6 +1,4 @@
-// ============================================================================
 // Vector Integration Gateway — Structured Logger
-// ============================================================================
 // Every log line is a structured JSON object with mandatory customer_id and
 // contract_id context. Designed for piping into observability platforms
 // (Datadog, Grafana Loki, CloudWatch).
@@ -9,13 +7,10 @@
 //   const ctx: LogContext = { customer_id: 'cust_123', contract_id: 'contract_456' };
 //   logger.info('Sync completed', ctx);
 //   logger.warn('Non-essential field missing', { ...ctx, field: 'page_url' });
-// ============================================================================
 
 import type { LogContext, LogLevel } from './types.js';
 
-// --------------------------------------------------------
 // Log Level Hierarchy
-// --------------------------------------------------------
 
 const LOG_LEVELS: Record<LogLevel, number> = {
   DEBUG: 0,
@@ -24,15 +19,11 @@ const LOG_LEVELS: Record<LogLevel, number> = {
   ERROR: 3,
 };
 
-// --------------------------------------------------------
 // Configuration
-// --------------------------------------------------------
 
 const CURRENT_LOG_LEVEL: LogLevel = (process.env['LOG_LEVEL'] as LogLevel) ?? 'DEBUG';
 
-// --------------------------------------------------------
 // Structured Log Entry
-// --------------------------------------------------------
 
 interface StructuredLogEntry {
   level: LogLevel;
@@ -41,9 +32,7 @@ interface StructuredLogEntry {
   context: LogContext;
 }
 
-// --------------------------------------------------------
 // Logger Implementation
-// --------------------------------------------------------
 
 function shouldLog(level: LogLevel): boolean {
   return LOG_LEVELS[level] >= LOG_LEVELS[CURRENT_LOG_LEVEL];
@@ -77,9 +66,7 @@ function log(level: LogLevel, message: string, context: LogContext): void {
   }
 }
 
-// --------------------------------------------------------
 // Public API
-// --------------------------------------------------------
 
 export const logger = {
   debug(message: string, context: LogContext): void {

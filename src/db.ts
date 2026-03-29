@@ -1,12 +1,9 @@
-// ============================================================================
 // Vector Integration Gateway — Database Layer (SQLite)
-// ============================================================================
 // SQLite database using `better-sqlite3` for zero-infrastructure local dev.
 // Provides typed query execution, transaction support, and structured logging.
 //
 // The database file is created at the path specified by DATABASE_PATH env var
 // (defaults to ./vector.db in the project root).
-// ============================================================================
 
 import Database from 'better-sqlite3';
 import { randomUUID } from 'node:crypto';
@@ -25,9 +22,7 @@ import type {
   TypeChange,
 } from './types.js';
 
-// --------------------------------------------------------
 // Database Initialization
-// --------------------------------------------------------
 
 const DATABASE_PATH = process.env['DATABASE_PATH'] ?? resolve(process.cwd(), 'vector.db');
 
@@ -60,9 +55,7 @@ export function initializeSchema(): void {
   logger.info('Database schema initialized', systemContext());
 }
 
-// --------------------------------------------------------
 // Contract Operations
-// --------------------------------------------------------
 
 export function createContract(
   customerId: string,
@@ -146,9 +139,7 @@ export function updateContractSchemaHash(
   ).run(schemaHash, contractId);
 }
 
-// --------------------------------------------------------
 // Sync Log Operations
-// --------------------------------------------------------
 
 export function createSyncLog(
   contractId: string,
@@ -214,9 +205,7 @@ function getSyncLogById(id: string): SyncLogEntry | null {
   return row ? deserializeSyncLog(row) : null;
 }
 
-// --------------------------------------------------------
 // Drift Alert Operations
-// --------------------------------------------------------
 
 export function createDriftAlert(
   contractId: string,
@@ -262,9 +251,7 @@ function getDriftAlertById(id: string): DriftAlertRecord | null {
   return row ? deserializeDriftAlert(row) : null;
 }
 
-// --------------------------------------------------------
 // Transaction Support
-// --------------------------------------------------------
 
 export function withTransaction<T>(fn: () => T): T {
   const d = getDb();
@@ -272,9 +259,7 @@ export function withTransaction<T>(fn: () => T): T {
   return transaction();
 }
 
-// --------------------------------------------------------
 // Lifecycle
-// --------------------------------------------------------
 
 export function disconnectPool(): void {
   if (db) {
@@ -286,9 +271,7 @@ export function disconnectPool(): void {
 // For backwards compat with async callers
 export { disconnectPool as disconnectPoolAsync };
 
-// --------------------------------------------------------
 // Raw Row Types (what SQLite actually returns)
-// --------------------------------------------------------
 
 interface RawContractRow {
   id: string;
@@ -331,9 +314,7 @@ interface RawDriftAlertRow {
   created_at: string;
 }
 
-// --------------------------------------------------------
 // Deserializers (raw SQLite rows → typed objects)
-// --------------------------------------------------------
 
 function deserializeContract(row: RawContractRow): IntegrationContract {
   return {

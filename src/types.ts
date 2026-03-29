@@ -1,13 +1,8 @@
-// ============================================================================
 // Vector Integration Gateway — Type Definitions
-// ============================================================================
 // Strongly typed interfaces for the entire gateway system.
 // All types are designed for TypeScript strict mode with noUncheckedIndexedAccess.
-// ============================================================================
 
-// --------------------------------------------------------
 // ENUMS
-// --------------------------------------------------------
 
 export enum PlatformName {
   HUBSPOT = 'HUBSPOT',
@@ -31,9 +26,7 @@ export enum SyncStatus {
   RETRYING = 'RETRYING',
 }
 
-// --------------------------------------------------------
 // Signal Types — Vector's internal vocabulary
-// --------------------------------------------------------
 
 export enum SignalType {
   PAGE_VIEW = 'PAGE_VIEW',
@@ -43,9 +36,7 @@ export enum SignalType {
   PRICING_PAGE_VISIT = 'PRICING_PAGE_VISIT',
 }
 
-// --------------------------------------------------------
 // Vector Visitor Payload — the canonical internal format
-// --------------------------------------------------------
 
 export interface VectorVisitorPayload {
   /** The identified visitor's email — PRIMARY KEY, non-negotiable */
@@ -76,9 +67,7 @@ export interface VectorVisitorPayload {
   custom_fields?: Record<string, unknown>;
 }
 
-// --------------------------------------------------------
 // Mapping Contract — the JSONB structure
-// --------------------------------------------------------
 
 export interface FieldMapping {
   /** The target field name in the CRM */
@@ -100,9 +89,7 @@ export interface FieldMapping {
 /** The full mapping contract — maps Vector internal field names to CRM target fields */
 export type MappingContract = Record<string, FieldMapping>;
 
-// --------------------------------------------------------
 // Database Row Types
-// --------------------------------------------------------
 
 export interface IntegrationContract {
   id: string;
@@ -145,9 +132,7 @@ export interface DriftAlertRecord {
   created_at: Date;
 }
 
-// --------------------------------------------------------
 // Drift Detection Types
-// --------------------------------------------------------
 
 export interface RemoteSchemaField {
   /** The field name as it exists in the CRM */
@@ -182,9 +167,7 @@ export interface DriftReport {
   timestamp: string;
 }
 
-// --------------------------------------------------------
 // Transformation Types
-// --------------------------------------------------------
 
 export interface TransformationResult {
   /** Whether the transformation succeeded */
@@ -217,9 +200,7 @@ export interface ValidationResult {
   non_essential_warnings: TransformationWarning[];
 }
 
-// --------------------------------------------------------
 // Mock Service Types
-// --------------------------------------------------------
 
 export interface MockAPIResponse {
   status: number;
@@ -228,9 +209,7 @@ export interface MockAPIResponse {
   request_id: string;
 }
 
-// --------------------------------------------------------
 // Logger Types
-// --------------------------------------------------------
 
 export interface LogContext {
   /** REQUIRED: The customer this log pertains to */

@@ -1,10 +1,7 @@
-// ============================================================================
 // Vector Integration Gateway — Demo Runner
-// ============================================================================
 // Full lifecycle demo: create contract → transform payload → sync → detect drift
 //
 // Run: npm run demo
-// ============================================================================
 
 import { logger, systemContext } from './logger.js';
 import * as db from './db.js';
@@ -23,9 +20,7 @@ import {
   type LogContext,
 } from './types.js';
 
-// --------------------------------------------------------
 // Sample Data
-// --------------------------------------------------------
 
 const SAMPLE_CUSTOMER_ID = 'cust_acme_corp_001';
 
@@ -101,25 +96,18 @@ const SAMPLE_PAYLOAD_MISSING_OPTIONAL: VectorVisitorPayload = {
   timestamp: new Date().toISOString(),
 };
 
-// --------------------------------------------------------
 // Demo Steps
-// --------------------------------------------------------
 
 function main(): void {
-  console.log('\n' + '='.repeat(70));
-  console.log('  VECTOR INTEGRATION GATEWAY — SINGLE CUSTOMER LIFECYCLE DEMO');
-  console.log('='.repeat(70) + '\n');
+  console.log('Starting Vector Integration Gateway - Demo Run');
 
   try {
-    // Initialize the database schema and ensure clean state
+    // Database initialization
     db.initializeSchema();
     resetHubSpotSchema();
 
-    // ---- STEP 1: Create Integration Contract ----
-    console.log('\n' + '─'.repeat(70));
-    console.log(`  STEP 1: Create Integration Contract for ${SAMPLE_CUSTOMER_ID}`);
-    console.log('─'.repeat(70) + '\n');
-
+    // STEP 1: Contract Creation
+    console.log('\n[Phase 1] Contract Initialization');
     const initialHash = generateSchemaHash(mockCRM.fetchHubSpotSchema(SAMPLE_CUSTOMER_ID));
 
     const contract = createIntegrationContract(
@@ -129,128 +117,99 @@ function main(): void {
       initialHash,
     );
 
-    console.log(`\n  ✓ Contract created: ${contract.id}`);
-    console.log(`  ✓ Version: ${contract.version}`);
-    console.log(`  ✓ Schema hash: ${initialHash.substring(0, 16)}...`);
+    console.log(`Created contract: ${contract.id} (Version: ${contract.version})`);
+    console.log(`Initial schema hash: ${initialHash.substring(0, 16)}...\n`);
 
-    // ---- STEP 2: Sync Worker — Testing Multiple Scenarios ----
-    console.log('\n' + '─'.repeat(70));
-    console.log('  STEP 2: Sync Worker — Outbox Pattern (Various Test Cases)');
-    console.log('─'.repeat(70) + '\n');
+    // STEP 2: Sync Scenarios (Outbox Pattern)
+    console.log('[Phase 2] Sync Worker Scenarios');
 
-    // Case A: Perfect Payload (Should be SENT)
-    console.log('  [Test Case A: Perfect Payload]');
+    // Case A: Ideal payload
+    console.log('- Test Case A: Valid Payload');
     forceAPIResponseCode(200);
     const syncLogA = enqueueSyncJob(contract, SAMPLE_VISITOR_PAYLOAD);
-    console.log(`  ✓ Enqueued outbox job: ${syncLogA.id}`);
     processPendingJobs();
 
-    // Case B: Missing Optional Fields (Graceful Degradation -> Defaults -> SENT)
-    console.log('\n  [Test Case B: Missing Optional Fields]');
+    // Case B: Partial payload (Graceful degradation)
+    console.log('- Test Case B: Missing Optional Fields');
     forceAPIResponseCode(200);
     const syncLogB = enqueueSyncJob(contract, SAMPLE_PAYLOAD_MISSING_OPTIONAL);
-    console.log(`  ✓ Enqueued outbox job (used defaults): ${syncLogB.id}`);
     processPendingJobs();
 
-    // Case C: Simulated Rate Limit / API Overload (Should be RETRYING)
-    console.log('\n  [Test Case C: CRM Rate Limiting]');
-    forceAPIResponseCode(429); // Simulate HubSpot 429 Too Many Requests
+    // Case C: Rate limiting
+    console.log('- Test Case C: CRM Rate Limit (429)');
+    forceAPIResponseCode(429);
     const syncLogC = enqueueSyncJob(contract, SAMPLE_VISITOR_PAYLOAD);
-    console.log(`  ✓ Enqueued outbox job: ${syncLogC.id}`);
     processPendingJobs();
 
-    // Case D: Permanent API Error (Bad Request -> FAILED)
-    console.log('\n  [Test Case D: CRM Returns Bad Request]');
-    forceAPIResponseCode(400); // Simulate HubSpot 400 Bad Request
+    // Case D: Permanent failure
+    console.log('- Test Case D: CRM Bad Request (400)');
+    forceAPIResponseCode(400);
     const syncLogD = enqueueSyncJob(contract, SAMPLE_VISITOR_PAYLOAD);
-    console.log(`  ✓ Enqueued outbox job: ${syncLogD.id}`);
     processPendingJobs();
 
-    // Case E: Missing Primary Key (Intercepted before Outbox)
-    console.log('\n  [Test Case E: Missing Primary Key (Major Issue)]');
+    // Case E: Invalid payload
+    console.log('- Test Case E: Missing Primary Key');
     try {
       const badPayload = { ...SAMPLE_VISITOR_PAYLOAD };
-      delete (badPayload as any).visitor_email; // Remove primary key
+      delete (badPayload as any).visitor_email;
       enqueueSyncJob(contract, badPayload);
     } catch (e) {
-      console.log(`  ✓ Prevented completely: ${(e as Error).message}`);
-      console.log(`  ✓ (Did NOT write to Outbox to save database space)`);
+      console.log(`  Rejected invalid payload: ${(e as Error).message}`);
     }
 
-    // Reset API mock to default behavior
     forceAPIResponseCode(null);
 
-    // ---- STEP 3: Simulate HubSpot Schema Drift ----
-    console.log('\n' + '─'.repeat(70));
-    console.log('  STEP 3: Simulate Customer Changing HubSpot Schema');
-    console.log('─'.repeat(70) + '\n');
-
-    console.log('  Customer renames "primary_contact_addr" to "main_email" directly in HubSpot...');
+    // STEP 3: Schema Drift Simulation
+    console.log('\n[Phase 3] Simulating Schema Drift');
+    console.log('- Renaming "primary_contact_addr" -> "main_email" in remote schema');
     mutateHubSpotSchema('rename', 'primary_contact_addr', 'main_email');
     
     const mutatedSchema = mockCRM.fetchHubSpotSchema(SAMPLE_CUSTOMER_ID);
     const mutatedHash = generateSchemaHash(mutatedSchema);
-    console.log(`  ✓ Remote schema mutated. New hash: ${mutatedHash.substring(0, 16)}...`);
+    console.log(`  New remote schema hash: ${mutatedHash.substring(0, 16)}...\n`);
 
-    // ---- STEP 4: Run Drift Detection ----
-    console.log('\n' + '─'.repeat(70));
-    console.log('  STEP 4: Drift Detection Engine');
-    console.log('─'.repeat(70) + '\n');
-
+    // STEP 4: Drift Detection Execution
+    console.log('[Phase 4] Executing Drift Detection');
     const updatedContract = db.getContractById(contract.id);
     if (!updatedContract) throw new Error('Contract not found');
 
     const report = detectDrift(updatedContract);
     
-    console.log(`\n  ✓ Drift detected: ${report.has_drift}`);
+    console.log(`- Drift status: ${report.has_drift}`);
     if (report.missing_fields.length > 0) {
-      console.log(`  ⚠ Missing Fields: ${report.missing_fields.join(', ')}`);
+      console.log(`- Missing mapping targets: ${report.missing_fields.join(', ')}`);
     }
 
-    // Verify system state changes
     const pausedContract = db.getContractById(contract.id);
-    console.log(`\n  ✓ Contract Status updated to: ${pausedContract?.status}`);
+    console.log(`- Updated contract status: ${pausedContract?.status}`);
     
     const alerts = db.getUnresolvedAlerts(contract.id);
-    console.log(`  ✓ Drift Alerts created in 'drift_alerts': ${alerts.length}`);
+    console.log(`- Active drift alerts: ${alerts.length}`);
     if (alerts.length > 0) {
-      console.log(`    Alert ID: ${alerts[0]!.id}`);
+      console.log(`  Alert ID: ${alerts[0]!.id}\n`);
     }
 
-    // ---- STEP 5: Attempt Sync While Paused ----
-    console.log('\n' + '─'.repeat(70));
-    console.log('  STEP 5: Attempting Sync with Paused Contract');
-    console.log('─'.repeat(70) + '\n');
-
+    // STEP 5: Post-Drift Sync Attempt
+    console.log('[Phase 5] Post-Drift Sync Verification');
     try {
         if (!pausedContract) throw new Error('Contract missing');
-        
-        // This should fail gracefully or refuse to sync based on your gateway logic
         if (pausedContract.status === 'DRIFT_DETECTED') {
-           console.log(`  ✓ System refused to sync data. Contract ${pausedContract.id} is paused due to drift.`);
-           console.log(`  ✓ This prevents bad data from failing silently or corrupting the customer's CRM.`);
+           console.log(`- Sync blocked. Contract ${pausedContract.id} is paused.`);
         }
     } catch (e) {
-        console.log(`  ✓ Sync gracefully blocked: ${(e as Error).message}`);
+        console.log(`- Execution error: ${(e as Error).message}`);
     }
 
-    // ---- DONE ----
-    console.log('\n' + '='.repeat(70));
-    console.log('  PROTOTYPE DEMO COMPLETE ✓');
-    console.log('='.repeat(70) + '\n');
-    console.log(`  Check the database for Contract ID: ${contract.id}`);
-    console.log(`  1. 'integration_contracts' -> See status = DRIFT_DETECTED`);
-    console.log(`  2. 'sync_logs' -> See the successful outbox sync`);
-    console.log(`  3. 'drift_alerts' -> See exactly what field broke the contract`);
-    console.log('');
+    console.log('\nDemo execution completed.');
+    console.log('Review SQLite database (vector.db) for full record state.');
 
   } catch (error) {
-    logger.error('Demo failed', {
+    logger.error('Demo execution failed', {
       ...systemContext(),
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });
-    console.error('\n  ✗ Demo failed:', error);
+    console.error('Fatal Error:', error);
   } finally {
     db.disconnectPool();
   }
