@@ -9,15 +9,50 @@
 
 ## Table of Contents
 
+- [Quick Start](#quick-start)
+- [Available Scripts](#available-scripts)
 - [Philosophy](#philosophy)
 - [The Problem: Onboarding Fire Drills](#the-problem-onboarding-fire-drills)
 - [The Solution: Integrations as Contracts](#the-solution-integrations-as-contracts)
 - [Architecture](#architecture)
 - [Key Reliability Features](#key-reliability-features)
-- [Technical Design Decisions](#technical-design-decisions)
-- [Getting Started](#getting-started)
-- [Scripts](#scripts)
 - [Schema Overview](#schema-overview)
+
+---
+
+## Quick Start
+
+The prototype uses **SQLite** for zero-infrastructure local development. No Docker or PostgreSQL config is required.
+
+### Prerequisites
+- Node.js 20+
+
+### Installation & Execution
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Run the full simulation (Database schema is auto-created on first run)
+npm run demo
+```
+
+If you want to run the demo again from a clean slate, you can wipe the database and start over:
+```bash
+# 3. Wipe and reset the database for a fresh run
+npm run db:reset
+```
+
+---
+
+## Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run demo` | **Run this to evaluate.** Executes the full lifecycle: contract creation → successful sync → schema drift simulation → pausing contract → graceful sync rejection. |
+| `npm run db:reset` | Deletes the `vector.db` file and re-initializes empty tables. |
+| `npm run typecheck` | Runs the TypeScript compiler in strict mode verification without emitting files. |
+| `npm run db:init` | Manually initializes the SQLite database schema if not already created. |
 
 ---
 
@@ -89,12 +124,12 @@ Every sync attempt is first written to a `sync_logs` table (the **outbox pattern
 │                     Vector Core Platform                         │
 │                                                                  │
 │  Raw Visitor Payload:                                            │
-│  { visitor_email, company_domain, signal_type, page_url, ... }  │
+│  { visitor_email, company_domain, signal_type, page_url, ... }   │
 └──────────────────────────┬───────────────────────────────────────┘
                            │
                            ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│                   Gateway Service (gateway.service.ts)            │
+│                   Gateway Service (gateway.service.ts)           │
 │                                                                  │
 │  1. Fetch active contract for customer + platform                │
 │  2. Validate payload completeness (primary vs non-essential)     │
@@ -105,20 +140,20 @@ Every sync attempt is first written to a `sync_logs` table (the **outbox pattern
                            │
                            ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│                    Sync Worker (syncWorker.ts)                    │
+│                    Sync Worker (syncWorker.ts)                   │
 │                                                                  │
 │  1. Write transformed payload to sync_logs (Outbox Pattern)      │
 │  2. Attempt API call to target CRM                               │
-│  3. On 429/500: schedule retry with exponential backoff           │
+│  3. On 429/500: schedule retry with exponential backoff          │
 │  4. On success: mark SENT                                        │
-│  5. On permanent failure: mark FAILED with error context          │
+│  5. On permanent failure: mark FAILED with error context         │
 └──────────────────────────────────────────────────────────────────┘
 
                     ┌──────────────┐
                     │              │
                     ▼              │ (periodic)
 ┌──────────────────────────────────────────────────────────────────┐
-│                  Drift Detector (driftDetector.ts)                │
+│                  Drift Detector (driftDetector.ts)               │
 │                                                                  │
 │  1. Fetch live schema from CRM API (or mock)                     │
 │  2. Generate SHA-256 hash of field names + types                 │
@@ -214,41 +249,7 @@ Direct API calls from the transformation engine create a failure mode where the 
 - Audit trail of every sync attempt
 - Dead letter queue for permanently failed syncs
 
----
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js 20+
-- That's it. No Docker, no PostgreSQL, no external services.
-
-The prototype uses **SQLite** via `better-sqlite3` for zero-infrastructure local development. The database is a single `vector.db` file created automatically in the project root.
-
-### Setup
-
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Run the full demo (auto-creates the database)
-npm run demo
-```
-
-The database schema is applied automatically on first run. No manual setup required.
-
----
-
-## Scripts
-
-| Script | Description |
-|--------|-------------|
-| `npm run demo` | Full lifecycle: create contract → transform payload → sync → detect drift |
-| `npm run build` | Compile TypeScript to `dist/` |
-| `npm run typecheck` | Type-check without emitting |
-| `npm run db:init` | Initialize SQLite database and schema |
-
----
 
 ## Schema Overview
 
